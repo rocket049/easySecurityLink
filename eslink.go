@@ -49,10 +49,6 @@ func (s *ESLink) Read() (data *Message, err error) {
 		}
 	}
 	res.Data = res.Data[:length-buf.Add]
-	if res.T == "Ctrl" && bytes.Compare([]byte("Close"), res.Data) == 0 {
-		s.C.Close()
-		return nil, io.EOF
-	}
 	return &res, nil
 }
 
@@ -86,12 +82,7 @@ func (s *ESLink) Write(typ string, data []byte) (err error) {
 
 //关闭连接
 func (s *ESLink) Close() error {
-	err := s.Write("Ctrl", []byte("Close"))
-	if err != nil {
-		return err
-	}
-	err = s.C.Close()
-	return err
+	return s.C.Close()
 }
 
 //把指定的连接升级为安全连接（服务端）
