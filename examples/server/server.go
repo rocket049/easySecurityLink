@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 
-	"gitee.com/rocket049/easySecurityLink"
+	"easySecurityLink"
 )
 
 func main() {

@@ -1,3 +1,3 @@
-module gitee.com/rocket049/easySecurityLink
+module easySecurityLink
 
 go 1.18

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"gitee.com/rocket049/easySecurityLink"
+	"easySecurityLink"
 )
 
 func main() {
