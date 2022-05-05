@@ -69,7 +69,6 @@ func (s *ESLink) Write(typ string, data []byte) (err error) {
 	data = buf.Bytes()
 	res := Message{T: typ, Data: make([]byte, length), Add: add}
 	for {
-		//数据段长度不够BlockSize时必须补全，还未完善
 		block.Encrypt(res.Data[n:], data[n:])
 		n += bs
 		if n >= length {
