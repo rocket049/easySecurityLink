@@ -14,6 +14,70 @@
 
 `import "github.com/rocket049/easySecurityLink"`
 
-具体用法可以参考examples。
+
+## 用法简介
+
+### 一、客户端
+
+```
+	c, err := easySecurityLink.Dial("host:port")
+	if err != nil {
+		panic(err)
+	}
+	defer c.Close()
+	//...
+	c.Write("type", []byte("message"))
+	//...
+	msg,err := c.Read()
+	if err != nil {
+		panic(err)
+	}
+	//...
+```
+
+### 二、服务端
+
+#### 用法一：
+
+```
+	l, err := net.Listen("tcp", "0.0.0.0:port")
+	if err != nil {
+		panic(err)
+	}
+	defer l.Close()
+	for {
+		c, err := easySecurityLink.Accept(l)
+		if err != nil {
+			panic(err)
+		}
+		defer c.Close()
+		//使用c ...
+	}
+```
+
+#### 用法二：
+
+```
+	l, err := net.Listen("tcp", "0.0.0.0:port")
+	if err != nil {
+		panic(err)
+	}
+	defer l.Close()
+	for {
+		c, err := l.Accept()
+		if err != nil {
+			return err
+		}
+		defer c.Close()
+		conn, err := easySecurityLink.Upgrade(c)
+		if err != nil {
+			return err
+		}
+		defer conn.Close()
+		//使用conn ...
+	}
+```
+
+具体用法可以参考`examples`。
 
 
