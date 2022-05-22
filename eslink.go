@@ -5,8 +5,10 @@ import (
 	"crypto/aes"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"encoding/gob"
 	"io"
+	"log"
 	"net"
 )
 
@@ -96,26 +98,31 @@ func Upgrade(c net.Conn) (*ESLink, error) {
 		c.Close()
 		return nil, err
 	}
-	//向客户端发送加密的AES密码（32字节）
-	var aesKey [32]byte
-	_, err = io.ReadFull(rand.Reader, aesKey[:])
+	//向客户端发送加密的AES密码（32字节），后32位是label
+	var rdata [64]byte
+	_, err = io.ReadFull(rand.Reader, rdata[:])
 	if err != nil {
 		c.Close()
 		return nil, err
 	}
-	keyCrypt, err := rsa.EncryptPKCS1v15(rand.Reader, &remotePubKey, aesKey[:])
+	aesKey := rdata[:32]
+	label := rdata[32:]
+	keyCrypt, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, &remotePubKey, aesKey, label)
 	if err != nil {
 		c.Close()
 		return nil, err
 	}
-	reply1 := Message{T: "Key", Data: keyCrypt, Add: 0}
+	data := bytes.NewBuffer(keyCrypt)
+	//log.Println(len(keyCrypt))
+	data.Write(label)
+	reply1 := Message{T: "Key", Data: data.Bytes(), Add: 0}
 	err = encoder.Encode(reply1)
 	if err != nil {
 		c.Close()
 		return nil, err
 	}
 
-	link := &ESLink{C: c, PrivKey: nil, RemotePubKey: &remotePubKey, AesKey: aesKey[:]}
+	link := &ESLink{C: c, PrivKey: nil, RemotePubKey: &remotePubKey, AesKey: aesKey}
 
 	return link, nil
 }
@@ -163,9 +170,12 @@ func Dial(addr string) (*ESLink, error) {
 		c.Close()
 		return nil, err
 	}
-	key, err := rsa.DecryptPKCS1v15(rand.Reader, privKey, reply1.Data)
+	aesKey := reply1.Data[:256]
+	label := reply1.Data[256:]
+	key, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, privKey, aesKey, label)
 	if err != nil {
 		c.Close()
+		log.Println(err.Error())
 		return nil, err
 	}
 
